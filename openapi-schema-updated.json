@@ -1,0 +1,444 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "DeepLingual Agent Actions (Consolidated)",
+    "version": "2.0.0",
+    "description": "API consolidada para obtener outputs pedagógicos (cualquier tipo) y generar/subir imágenes a WordPress. Los endpoints ahora son agnósticos del tipo de actividad."
+  },
+  "servers": [
+    {
+      "url": "https://api-deeplingual2025.vercel.app"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Formato: Bearer <API_TOKEN>"
+      }
+    },
+    "schemas": {
+      "PedagogicalOutputResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID del registro en Airtable"
+              },
+              "attributes": {
+                "type": "object",
+                "properties": {
+                  "run_id": {
+                    "type": "string",
+                    "description": "Run ID único de la actividad"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Fecha de creación"
+                  },
+                  "wp_post_id": {
+                    "type": ["integer", "null"],
+                    "description": "ID del post en WordPress (si existe)"
+                  },
+                  "activity_type": {
+                    "type": "string",
+                    "enum": ["curriculum", "logic"],
+                    "description": "Tipo de actividad: 'curriculum' (deep-lingual) o 'logic' (deepgraphic)"
+                  },
+                  "wp_endpoint": {
+                    "type": "string",
+                    "enum": ["planessemanales", "actividadlogicomatematica"],
+                    "description": "Endpoint de WordPress correspondiente"
+                  },
+                  "default_fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Campos ACF por defecto para este tipo de actividad"
+                  },
+                  "output": {
+                    "type": "object",
+                    "description": "JSON completo del output pedagógico"
+                  }
+                },
+                "required": ["run_id", "created_at", "wp_post_id", "activity_type", "wp_endpoint"]
+              }
+            },
+            "required": ["id", "attributes"]
+          }
+        },
+        "required": ["data"]
+      },
+      "CreateImgRequest": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "description": "Descripción de la imagen a generar"
+          },
+          "wp_post_id": {
+            "type": "integer",
+            "description": "ID del post de WordPress donde guardar la imagen"
+          },
+          "run_id": {
+            "type": "string",
+            "description": "Run ID de la actividad (determina automáticamente el endpoint y campos)"
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1,
+            "description": "Número de imágenes a generar (1-4)"
+          },
+          "size": {
+            "type": "string",
+            "default": "1024x1024",
+            "enum": ["1024x1024", "1792x1024", "1024x1792"],
+            "description": "Tamaño de la imagen"
+          },
+          "update_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Campos ACF a actualizar. Si se omite, usa los campos por defecto según el run_id:\n- deep-lingual-*: ['foto']\n- deepgraphic-*: ['plantilla_es']"
+          }
+        },
+        "required": ["prompt"],
+        "additionalProperties": false
+      },
+      "CreateImgResponse": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": ["string", "null"],
+            "description": "Run ID asociado"
+          },
+          "wp_post_id": {
+            "type": ["integer", "null"],
+            "description": "ID del post actualizado en WordPress"
+          },
+          "previews": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "media_id": {
+                  "type": "integer",
+                  "description": "ID del archivo en WordPress Media Library"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URL pública de la imagen (puede ser GCS o WordPress local)"
+                }
+              },
+              "required": ["media_id", "url"]
+            }
+          }
+        },
+        "required": ["previews"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Tipo de error"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensaje descriptivo del error"
+          },
+          "details": {
+            "description": "Detalles adicionales del error"
+          }
+        },
+        "required": ["error"]
+      }
+    }
+  },
+  "paths": {
+    "/api/images/latest": {
+      "get": {
+        "operationId": "getLatestActivity",
+        "summary": "Obtiene la última actividad pedagógica (de cualquier tipo)",
+        "description": "Retorna el output más reciente independientemente si es curricular (deep-lingual) o lógico-matemática (deepgraphic). El campo 'activity_type' indica el tipo.",
+        "security": [
+          {
+            "ApiToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - Última actividad encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PedagogicalOutputResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "recABC123",
+                    "attributes": {
+                      "run_id": "deep-lingual-2025-01-19T10:00:00Z",
+                      "created_at": "2025-01-19T10:00:00.000Z",
+                      "wp_post_id": 456,
+                      "activity_type": "curriculum",
+                      "wp_endpoint": "planessemanales",
+                      "default_fields": ["foto"],
+                      "output": {
+                        "tema": "La familia",
+                        "tipo_de_actividad": "lectura"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado - Token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrado - No hay registros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/images/{id}": {
+      "get": {
+        "operationId": "getActivityById",
+        "summary": "Obtiene una actividad específica por Run ID",
+        "description": "Busca y retorna una actividad pedagógica usando su Run ID único. Funciona para cualquier tipo de actividad (curricular o lógico-matemática).",
+        "security": [
+          {
+            "ApiToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Run ID de la actividad (ej: 'deep-lingual-2025-01-19T10:00:00Z' o 'deepgraphic-2025-01-19T10:00:00Z')",
+            "example": "deep-lingual-2025-01-19T10:00:00Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK - Actividad encontrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PedagogicalOutputResponse"
+                },
+                "example": {
+                  "data": {
+                    "id": "recXYZ789",
+                    "attributes": {
+                      "run_id": "deepgraphic-2025-01-19T11:00:00Z",
+                      "created_at": "2025-01-19T11:00:00.000Z",
+                      "wp_post_id": 789,
+                      "activity_type": "logic",
+                      "wp_endpoint": "actividadlogicomatematica",
+                      "default_fields": ["plantilla_es"],
+                      "output": {
+                        "tema": "Números del 1 al 10",
+                        "tipo_razonamiento": "secuencias"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Falta el Run ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado - Token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrado - Run ID no existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Not found",
+                  "message": "No se encontró ningún output con Run ID: deep-lingual-invalid",
+                  "run_id": "deep-lingual-invalid"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/images/created_img": {
+      "post": {
+        "operationId": "createAndAttachImage",
+        "summary": "Genera imagen con OpenAI y la asocia a un post de WordPress",
+        "description": "Genera una imagen usando DALL-E, la sube a WordPress Media Library y la asocia al post correspondiente (planessemanales o actividadlogicomatematica) según el run_id. Incluye renovación automática de JWT.",
+        "security": [
+          {
+            "ApiToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateImgRequest"
+              },
+              "examples": {
+                "curriculum": {
+                  "summary": "Imagen para actividad curricular",
+                  "value": {
+                    "prompt": "Ilustración infantil de una familia feliz en el parque",
+                    "wp_post_id": 456,
+                    "run_id": "deep-lingual-2025-01-19T10:00:00Z",
+                    "n": 1,
+                    "size": "1024x1024"
+                  }
+                },
+                "logic": {
+                  "summary": "Imagen para actividad lógico-matemática",
+                  "value": {
+                    "prompt": "Ilustración educativa de números del 1 al 10 con colores",
+                    "wp_post_id": 789,
+                    "run_id": "deepgraphic-2025-01-19T11:00:00Z",
+                    "n": 1,
+                    "size": "1024x1024",
+                    "update_fields": ["plantilla_en"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK - Imagen(es) generada(s) y asociada(s) exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateImgResponse"
+                },
+                "example": {
+                  "run_id": "deep-lingual-2025-01-19T10:00:00Z",
+                  "wp_post_id": 456,
+                  "previews": [
+                    {
+                      "media_id": 1234,
+                      "url": "https://storage.googleapis.com/bucket/imagen.jpg"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Prompt faltante o inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado - Token inválido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error del servidor (OpenAI o WordPress)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "WP planessemanales update failed (acf not saved)",
+                  "status": 401,
+                  "details": "{\"code\":\"rest_cannot_create\"}"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+

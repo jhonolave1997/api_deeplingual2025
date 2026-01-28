@@ -1,0 +1,216 @@
+# ============================================
+# ARCHIVOS DE ENTORNO Y CREDENCIALES
+# ============================================
+# Archivos de entorno (contienen API keys, tokens, contraseñas)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.staging
+.env*.local
+.env*.backup
+*.env
+
+# Archivos de credenciales
+credentials.json
+credentials.js
+secrets.json
+secrets.js
+config.json
+config.local.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+*.cert
+
+# Tokens y API keys
+*.token
+*.jwt
+api-keys.txt
+tokens.txt
+
+# ============================================
+# ARCHIVOS DE CONFIGURACIÓN SENSIBLE
+# ============================================
+# Configuración de bases de datos
+database.json
+db-config.json
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuración de servicios
+vercel.json.local
+vercel.env.local
+.vercel/project.json
+.vercel/.env
+
+# ============================================
+# LOGS Y ARCHIVOS TEMPORALES
+# ============================================
+# Logs (pueden contener información sensible)
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================
+# BACKUPS Y ARCHIVOS DE RESPALDO
+# ============================================
+backup/
+backups/
+*.backup
+*.bak
+*.old
+*.orig
+
+# ============================================
+# DEPENDENCIAS Y BUILD
+# ============================================
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.vercel/
+
+# ============================================
+# ARCHIVOS DE IDE Y EDITORES
+# ============================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================
+# ARCHIVOS DE SISTEMA OPERATIVO
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# ARCHIVOS DE TESTING Y DESARROLLO
+# ============================================
+# Archivos de prueba con datos sensibles
+test-credentials.js
+test-env.js
+test-secrets.js
+*.test.local.js
+*.spec.local.js
+
+# Coverage reports
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# ARCHIVOS DE DEPLOYMENT
+# ============================================
+# Vercel
+.vercel/
+
+# Serverless
+.serverless/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# ============================================
+# ARCHIVOS DE CACHE
+# ============================================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ============================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# ============================================
+# Scripts de generación de tokens (pueden contener credenciales)
+generate-token.js
+test-credentials.js
+test-jwt-generation.js
+test-jwt-renewal.js
+
+# Archivos PHP de backup
+backup/*.php
+*.php.backup
+
+# ============================================
+# OTROS ARCHIVOS SENSIBLES
+# ============================================
+# Archivos de migración con datos sensibles
+migrations/*.sql
+*.sql.backup
+
+# Archivos de configuración de servicios externos
+aws-credentials.json
+gcp-credentials.json
+azure-credentials.json
+
+# Archivos de sesión
+*.session
+*.sess
+
+# Archivos de lock con información sensible
+package-lock.json.backup
+yarn.lock.backup

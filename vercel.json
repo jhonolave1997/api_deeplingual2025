@@ -1,0 +1,26 @@
+{
+  "functions": {
+    "api/images/created_img.js": {
+      "maxDuration": 300
+    },
+    "api/images/latest.js": {
+      "maxDuration": 30
+    },
+    "api/images/[id].js": {
+      "maxDuration": 30
+    },
+    "api/pedagogical-outputs/index.js": {
+      "maxDuration": 120
+    },
+    "api/pedagogical-outputs-logic/index.js": {
+      "maxDuration": 120
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
+}
+
